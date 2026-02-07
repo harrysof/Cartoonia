@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartoonia - Safe Content for Kids</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="phone-frame">
+
+        <!-- SPLASH SCREEN -->
+        <div class="screen active" id="splash-screen">
+            <img src="assets/logo.png" alt="Cartoonia Logo" class="splash-logo-img">
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+        </div>
+
+        <!-- PARENT SETUP -->
+        <div class="screen" id="parent-setup-screen">
+            <div class="onboarding-container">
+                <img src="assets/logo.png" alt="Cartoonia" class="logo-header">
+                <h2>Bienvenue</h2>
+                <p style="margin-bottom: 30px;">Configuration parentale</p>
+
+                <input type="text" id="parentNameInput" placeholder="Votre prénom" maxlength="20">
+                <button class="btn-primary" id="continueParentBtn">Continuer</button>
+            </div>
+        </div>
+
+        <!-- KIDS SETUP -->
+        <div class="screen" id="kids-setup-screen">
+            <div class="onboarding-container">
+                <h2>Profils Enfants</h2>
+                <p style="margin-bottom: 30px;">Créez les profils de vos enfants</p>
+
+                <div id="kidsList" class="kids-list">
+                    <!-- Dynamic List -->
+                </div>
+
+                <button class="btn-secondary" id="addKidBtn" style="margin-bottom: 12px;">+ Ajouter un enfant</button>
+                <button class="btn-primary" id="continueKidsBtn">Terminer</button>
+            </div>
+        </div>
+
+        <!-- HOME SCREEN (Profile Selection) -->
+        <div class="screen" id="home-screen">
+            <img src="assets/logo.png" alt="Cartoonia" class="logo-header" style="width: 100px; margin-bottom: 10px;">
+            <p id="parentGreeting">Qui regarde ?</p>
+
+            <div class="profiles-grid" id="profileSelector">
+                <!-- Dynamic Profiles -->
+            </div>
+
+            <button id="settingsBtn"
+                style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: #666; cursor: pointer;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- PROFILE DASHBOARD (Selected Kid) -->
+        <div class="screen" id="profile-screen">
+            <div class="dashboard-header">
+                <div class="back-btn" data-back="home-screen">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                </div>
+                <div class="user-welcome">
+                    <div class="mini-avatar" id="dashAvatar"></div>
+                    <span id="dashName" style="font-weight: 600;">Youssef</span>
+                </div>
+                <div style="width: 40px;"></div> <!-- Spacer -->
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <span class="stat-value" id="statVideos">0</span>
+                    <span class="stat-label">Vidéos</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="statStories">0</span>
+                    <span class="stat-label">Histoires</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="statTime">0h</span>
+                    <span class="stat-label">Temps</span>
+                </div>
+            </div>
+
+            <!-- Main Actions -->
+            <h3 style="margin-bottom: 16px; font-size: 18px;">Activités</h3>
+            <div class="dashboard-actions">
+                <div class="dash-action-card" data-screen="filter-screen">
+                    <div class="action-info">
+                        <h3>Filtrer le contenu</h3>
+                        <p>Contrôle parental avancé</p>
+                    </div>
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="dash-action-card" data-screen="generate-screen">
+                    <div class="action-info">
+                        <h3>Créer une histoire</h3>
+                        <p>Généré par IA</p>
+                    </div>
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="dash-action-card" data-screen="youtube-screen">
+                    <div class="action-info">
+                        <h3>Regarder</h3>
+                        <p>Vidéos YouTube Kids</p>
+                    </div>
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mascot-container">
+                <img src="assets/fox-mascot.jpg" alt="Mascot" class="mascot-img">
+            </div>
+        </div>
+
+        <!-- FILTER SCREEN -->
+        <div class="screen" id="filter-screen">
+            <div class="dashboard-header">
+                <div class="back-btn" data-back="profile-screen">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                </div>
+                <span style="font-weight: 600;">Filtres</span>
+                <div style="width: 40px;"></div>
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-header">Plateformes autorisées</span>
+                <div class="platform-chips">
+                    <div class="chip active" data-platform="youtube">YouTube</div>
+                    <div class="chip" data-platform="tiktok">TikTok</div>
+                    <div class="chip" data-platform="dailymotion">Dailymotion</div>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <span class="filter-header" style="margin:0;">Âge maximum</span>
+                    <span id="ageValue" style="color: var(--primary-orange); font-weight: 700;">6 ans</span>
+                </div>
+                <div class="slider-container">
+                    <input type="range" id="ageSlider" min="3" max="12" value="6">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <span class="filter-header">Bloquer les scènes</span>
+                <div class="platform-chips">
+                    <div class="chip" data-scene="violence">Violence</div>
+                    <div class="chip" data-scene="language">Langage</div>
+                    <div class="chip" data-scene="fear">Peur</div>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="applyFilterBtn">Appliquer les filtres</button>
+        </div>
+
+        <!-- GENERATE SCREEN -->
+        <div class="screen" id="generate-screen">
+            <div class="dashboard-header">
+                <div class="back-btn" data-back="profile-screen">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                </div>
+                <span style="font-weight: 600;">Studio Histoires</span>
+                <div style="width: 40px;"></div>
+            </div>
+
+            <div class="chat-area" id="chatArea">
+                <div class="msg ai">Bonjour ! Quel type d'histoire voulez-vous créer aujourd'hui ?</div>
+            </div>
+
+            <div class="input-area">
+                <input type="text" id="storyInput" placeholder="Ex: Un ours qui aime le miel..." style="margin:0;">
+                <button class="send-btn-icon" id="sendStoryBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+
+            <button class="btn-primary" id="generateVideoBtn" style="margin-top: 20px;" disabled>Générer la
+                vidéo</button>
+        </div>
+
+        <!-- CONTENT SCREEN -->
+        <div class="screen" id="youtube-screen">
+            <div class="dashboard-header">
+                <div class="back-btn" data-back="profile-screen">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                </div>
+                <span style="font-weight: 600;">Vidéos</span>
+                <div style="width: 40px;"></div>
+            </div>
+
+            <div class="content-tabs">
+                <div class="tab-btn active">Pour toi</div>
+                <div class="tab-btn">Dessins animés</div>
+                <div class="tab-btn">Éducatif</div>
+                <div class="tab-btn">Musique</div>
+            </div>
+
+            <div class="video-grid" id="videoGrid">
+                <!-- Videos -->
+            </div>
+        </div>
+
+        <!-- MODAL ADD KID -->
+        <div id="addKidModal"
+            style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 200;">
+            <div
+                style="background: var(--card-color); padding: 30px; border-radius: 20px; width: 320px; text-align: center;">
+                <h3 style="margin-bottom: 20px;">Ajouter un profil</h3>
+                <input type="text" id="kidNameInput" placeholder="Prénom">
+                <input type="number" id="kidAgeInput" placeholder="Âge">
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-secondary" id="cancelKidBtn">Annuler</button>
+                    <button class="btn-primary" id="confirmKidBtn">Ajouter</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <script src="app.js"></script>
+</body>
+
+</html>
