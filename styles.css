@@ -399,17 +399,51 @@ input:focus {
     fill: var(--primary-orange);
 }
 
+
 .mascot-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    display: flex;
+    justify-content: center;
     z-index: 10;
     pointer-events: none;
 }
 
+.mascot-container.bottom {
+    bottom: -10px;
+}
+
+.mascot-container.top {
+    top: 20px;
+}
+
+.mascot-container.left {
+    left: 20px;
+    transform: none;
+    justify-content: flex-start;
+}
+
+.mascot-container.right {
+    left: auto;
+    right: 20px;
+    transform: none;
+    justify-content: flex-end;
+}
+
 .mascot-img {
-    width: 140px;
+    width: 180px;
     filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+    transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.mascot-img.small {
+    width: 120px;
+}
+
+.mascot-img.large {
+    width: 220px;
 }
 
 /* ===== FILTER SCREEN ===== */
@@ -459,11 +493,13 @@ input:focus {
 input[type="range"] {
     width: 100%;
     -webkit-appearance: none;
+    appearance: none;
     background: transparent;
 }
 
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
+    appearance: none;
     height: 24px;
     width: 24px;
     border-radius: 50%;
@@ -582,6 +618,7 @@ input[type="range"]::-webkit-slider-runnable-track {
     margin-bottom: 4px;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
@@ -589,4 +626,41 @@ input[type="range"]::-webkit-slider-runnable-track {
 .vid-meta {
     font-size: 12px;
     color: var(--text-muted);
+}
+
+/* ===== MASCOT GLASSY EFFECT ===== */
+.clickable-mascot {
+    pointer-events: all;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.clickable-mascot:active {
+    transform: scale(0.95);
+}
+
+.glassy-ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 138, 76, 0.4) 0%, rgba(78, 205, 196, 0.3) 50%, transparent 70%);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(255, 138, 76, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+    pointer-events: none;
+    animation: rippleEffect 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes rippleEffect {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+
+    100% {
+        width: 200px;
+        height: 200px;
+        opacity: 0;
+    }
 }

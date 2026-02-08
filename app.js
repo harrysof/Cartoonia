@@ -1,4 +1,6 @@
 // ===== APP STATE =====
+const STORAGE_KEY = 'cartoonia_app_state';
+
 let appState = {
     parentName: '',
     kids: [],
@@ -11,12 +13,44 @@ let appState = {
     }
 };
 
+// ===== PERSISTENCE =====
+function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+}
+
+function loadState() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+        try {
+            appState = JSON.parse(saved);
+            return true;
+        } catch (e) {
+            console.error('Failed to parse saved state', e);
+        }
+    }
+    return false;
+}
+
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', () => {
-    // Splash screen auto-advance
-    setTimeout(() => {
-        navigateToScreen('parent-setup-screen');
-    }, 2000);
+    const hasSavedState = loadState();
+
+    if (hasSavedState && appState.parentName && appState.kids.length > 0) {
+        // Skip splash/onboarding if we have data
+        navigateToScreen('home-screen');
+        updateHomeScreen();
+        generateVideos();
+    } else {
+        // Splash screen auto-advance
+        setTimeout(() => {
+            if (appState.parentName) {
+                navigateToScreen('kids-setup-screen');
+                updateKidsList();
+            } else {
+                navigateToScreen('parent-setup-screen');
+            }
+        }, 2000);
+    }
 
     initializeEventListeners();
 });
@@ -43,6 +77,7 @@ function initializeEventListeners() {
         const name = parentNameInput.value.trim();
         if (name) {
             appState.parentName = name;
+            saveState(); // Persist name
             navigateToScreen('kids-setup-screen');
         } else {
             parentNameInput.style.border = '1px solid var(--primary-orange)';
@@ -52,6 +87,7 @@ function initializeEventListeners() {
     // Kids setup
     document.getElementById('addKidBtn')?.addEventListener('click', showAddKidModal);
     document.getElementById('cancelKidBtn')?.addEventListener('click', hideAddKidModal);
+    document.getElementById('closeModalBtn')?.addEventListener('click', hideAddKidModal);
     document.getElementById('confirmKidBtn')?.addEventListener('click', addKid);
     document.getElementById('continueKidsBtn')?.addEventListener('click', () => {
         if (appState.kids.length > 0) {
@@ -100,8 +136,10 @@ function initializeEventListeners() {
 
     document.getElementById('applyFilterBtn')?.addEventListener('click', () => {
         const btn = document.getElementById('applyFilterBtn');
-        btn.innerHTML = 'Filtres appliqués';
+        btn.innerHTML = '<img src="assets/icons/checkmark.png" alt="Checked" style="width: 20px; height: 20px; margin-right: 8px;"> Filtres appliqués';
         btn.style.background = 'var(--primary-teal)';
+
+        saveState(); // Persist filters
 
         setTimeout(() => {
             btn.innerHTML = 'Appliquer les filtres';
@@ -163,6 +201,7 @@ function initializeEventListeners() {
                 selectedKid: null,
                 filters: { platforms: ['youtube'], maxAge: 6, blockedScenes: [], keywords: '' }
             };
+            localStorage.removeItem(STORAGE_KEY); // Clear persisted data
             navigateToScreen('parent-setup-screen');
         }
     });
@@ -203,6 +242,7 @@ function addKid() {
         };
 
         appState.kids.push(kid);
+        saveState(); // Persist new kid
         updateKidsList();
         hideAddKidModal();
     } else {
@@ -245,7 +285,9 @@ function updateHomeScreen() {
         profileCard.className = 'profile-card';
         profileCard.onclick = () => selectKid(kid.id);
         profileCard.innerHTML = `
-            <div class="profile-avatar" style="background: linear-gradient(135deg, ${getRandomColor()}, ${getRandomColor()})"></div>
+            <div class="profile-avatar" style="background: linear-gradient(135deg, ${getRandomColor()}, ${getRandomColor()}); position: relative; display: flex; align-items: center; justify-content: center;">
+                <img src="assets/icons/profile_overlay.png" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8; border-radius: 50%;">
+            </div>
             <p class="profile-name">${kid.name}</p>
         `;
         profileSelector.appendChild(profileCard);
@@ -256,7 +298,7 @@ function updateHomeScreen() {
     addBtn.className = 'add-profile-btn';
     addBtn.onclick = showAddKidModal;
     addBtn.innerHTML = `
-        <div class="add-icon">+</div>
+        <img src="assets/icons/add_profile.png" alt="Add" style="width: 32px; height: 32px; margin-bottom: 8px;">
         <span>Ajouter</span>
     `;
     profileSelector.appendChild(addBtn);
@@ -329,7 +371,9 @@ function generateVideos() {
         const item = document.createElement('div');
         item.className = 'video-item';
         item.innerHTML = `
-            <div class="thumb" style="background: linear-gradient(45deg, ${getRandomColor()}, #333)"></div>
+            <div class="thumb" style="background: linear-gradient(45deg, ${getRandomColor()}, #333); position: relative; display: flex; align-items: center; justify-content: center;">
+                <img src="assets/icons/play_overlay.png" alt="Play" style="width: 48px; height: 48px;">
+            </div>
             <div class="vid-info">
                 <div class="vid-title">${video.title}</div>
                 <div class="vid-meta">${video.duration} • Vu 1.2k</div>
@@ -341,3 +385,32 @@ function generateVideos() {
 
 // Initialize videos
 generateVideos();
+
+// ===== MASCOT GLASSY EFFECT =====
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('clickable-mascot')) {
+        const mascot = e.target;
+        const container = mascot.parentElement;
+
+        // Create ripple element
+        const ripple = document.createElement('div');
+        ripple.className = 'glassy-ripple';
+
+        // Position ripple at click location
+        const rect = mascot.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+        ripple.style.transform = 'translate(-50%, -50%)';
+
+        container.style.position = 'relative';
+        container.appendChild(ripple);
+
+        // Remove ripple after animation
+        setTimeout(() => {
+            ripple.remove();
+        }, 800);
+    }
+});

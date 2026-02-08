@@ -32,6 +32,9 @@
                 <input type="text" id="parentNameInput" placeholder="Votre prénom" maxlength="20">
                 <button class="btn-primary" id="continueParentBtn">Continuer</button>
             </div>
+            <div class="mascot-container bottom">
+                <img src="assets/mascot-laptop.png" alt="Mascot" class="mascot-img clickable-mascot">
+            </div>
         </div>
 
         <!-- KIDS SETUP -->
@@ -47,6 +50,9 @@
                 <button class="btn-secondary" id="addKidBtn" style="margin-bottom: 12px;">+ Ajouter un enfant</button>
                 <button class="btn-primary" id="continueKidsBtn">Terminer</button>
             </div>
+            <div class="mascot-container bottom">
+                <img src="assets/mascot-sitting.png" alt="Mascot" class="mascot-img clickable-mascot">
+            </div>
         </div>
 
         <!-- HOME SCREEN (Profile Selection) -->
@@ -58,24 +64,27 @@
                 <!-- Dynamic Profiles -->
             </div>
 
-            <button id="settingsBtn"
-                style="position: absolute; top: 20px; right: 20px; background: none; border: none; color: #666; cursor: pointer;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path
-                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                    </path>
-                </svg>
-            </button>
+            <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 15px;">
+                <button id="searchBtn" style="background: none; border: none; cursor: pointer;">
+                    <img src="assets/icons/search.png" alt="Search" style="width: 24px; height: 24px; opacity: 0.6;">
+                </button>
+                <button id="settingsBtn" style="background: none; border: none; cursor: pointer;">
+                    <img src="assets/icons/settings.png" alt="Settings"
+                        style="width: 24px; height: 24px; opacity: 0.6;">
+                </button>
+            </div>
+
+            <div class="mascot-container top">
+                <img src="assets/mascot-pointing.png" alt="Mascot" class="mascot-img clickable-mascot"
+                    style="position: relative; z-index: 5;">
+            </div>
         </div>
 
         <!-- PROFILE DASHBOARD (Selected Kid) -->
         <div class="screen" id="profile-screen">
             <div class="dashboard-header">
                 <div class="back-btn" data-back="home-screen">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M15 18l-6-6 6-6" />
-                    </svg>
+                    <img src="assets/icons/back_arrow.png" alt="Back" style="width: 24px; height: 24px;">
                 </div>
                 <div class="user-welcome">
                     <div class="mini-avatar" id="dashAvatar"></div>
@@ -109,10 +118,7 @@
                         <p>Contrôle parental avancé</p>
                     </div>
                     <div class="icon-box">
-                        <svg viewBox="0 0 24 24">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
+                        <img src="assets/icons/filter.png" alt="Filter" style="width: 24px; height: 24px;">
                     </div>
                 </div>
 
@@ -122,9 +128,7 @@
                         <p>Généré par IA</p>
                     </div>
                     <div class="icon-box">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                        </svg>
+                        <img src="assets/icons/create.png" alt="Create" style="width: 24px; height: 24px;">
                     </div>
                 </div>
 
@@ -134,15 +138,14 @@
                         <p>Vidéos YouTube Kids</p>
                     </div>
                     <div class="icon-box">
-                        <svg viewBox="0 0 24 24">
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                        </svg>
+                        <img src="assets/icons/play_overlay.png" alt="Watch" style="width: 24px; height: 24px;">
                     </div>
                 </div>
             </div>
 
-            <div class="mascot-container">
-                <img src="assets/fox-mascot.jpg" alt="Mascot" class="mascot-img">
+            <div class="mascot-container bottom">
+                <img src="assets/mascot-relaxed.png" alt="Mascot" class="mascot-img clickable-mascot"
+                    data-mascot="profile">
             </div>
         </div>
 
@@ -150,9 +153,7 @@
         <div class="screen" id="filter-screen">
             <div class="dashboard-header">
                 <div class="back-btn" data-back="profile-screen">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M15 18l-6-6 6-6" />
-                    </svg>
+                    <img src="assets/icons/back_arrow.png" alt="Back" style="width: 24px; height: 24px;">
                 </div>
                 <span style="font-weight: 600;">Filtres</span>
                 <div style="width: 40px;"></div>
@@ -193,9 +194,7 @@
         <div class="screen" id="generate-screen">
             <div class="dashboard-header">
                 <div class="back-btn" data-back="profile-screen">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M15 18l-6-6 6-6" />
-                    </svg>
+                    <img src="assets/icons/back_arrow.png" alt="Back" style="width: 24px; height: 24px;">
                 </div>
                 <span style="font-weight: 600;">Studio Histoires</span>
                 <div style="width: 40px;"></div>
@@ -208,10 +207,7 @@
             <div class="input-area">
                 <input type="text" id="storyInput" placeholder="Ex: Un ours qui aime le miel..." style="margin:0;">
                 <button class="send-btn-icon" id="sendStoryBtn">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2">
-                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
+                    <img src="assets/icons/send.png" alt="Send" style="width: 24px; height: 24px;">
                 </button>
             </div>
 
@@ -223,9 +219,7 @@
         <div class="screen" id="youtube-screen">
             <div class="dashboard-header">
                 <div class="back-btn" data-back="profile-screen">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M15 18l-6-6 6-6" />
-                    </svg>
+                    <img src="assets/icons/back_arrow.png" alt="Back" style="width: 24px; height: 24px;">
                 </div>
                 <span style="font-weight: 600;">Vidéos</span>
                 <div style="width: 40px;"></div>
@@ -247,7 +241,11 @@
         <div id="addKidModal"
             style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 200;">
             <div
-                style="background: var(--card-color); padding: 30px; border-radius: 20px; width: 320px; text-align: center;">
+                style="background: var(--card-color); padding: 30px; border-radius: 20px; width: 320px; text-align: center; position: relative;">
+                <button id="closeModalBtn"
+                    style="position: absolute; top: 15px; right: 15px; background: none; border: none; cursor: pointer;">
+                    <img src="assets/icons/close.png" alt="Close" style="width: 20px; height: 20px; opacity: 0.6;">
+                </button>
                 <h3 style="margin-bottom: 20px;">Ajouter un profil</h3>
                 <input type="text" id="kidNameInput" placeholder="Prénom">
                 <input type="number" id="kidAgeInput" placeholder="Âge">
