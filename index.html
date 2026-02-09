@@ -124,11 +124,11 @@
 
                 <div class="dash-action-card" data-screen="generate-screen">
                     <div class="action-info">
-                        <h3>Créer une histoire</h3>
-                        <p>Généré par IA</p>
+                        <h3>Chat Vocal</h3>
+                        <p>Parle avec l'IA</p>
                     </div>
                     <div class="icon-box">
-                        <img src="assets/icons/create.png" alt="Create" style="width: 24px; height: 24px;">
+                        <img src="assets/icons/microphone.png" alt="Voice" style="width: 24px; height: 24px;">
                     </div>
                 </div>
 
@@ -190,29 +190,33 @@
             <button class="btn-primary" id="applyFilterBtn">Appliquer les filtres</button>
         </div>
 
-        <!-- GENERATE SCREEN -->
+        <!-- GENERATE SCREEN (VOICE CHAT) -->
         <div class="screen" id="generate-screen">
             <div class="dashboard-header">
                 <div class="back-btn" data-back="profile-screen">
                     <img src="assets/icons/back_arrow.png" alt="Back" style="width: 24px; height: 24px;">
                 </div>
-                <span style="font-weight: 600;">Studio Histoires</span>
+                <span style="font-weight: 600;">Chat Vocal</span>
                 <div style="width: 40px;"></div>
             </div>
 
             <div class="chat-area" id="chatArea">
-                <div class="msg ai">Bonjour ! Quel type d'histoire voulez-vous créer aujourd'hui ?</div>
+                <div class="msg ai">Coucou ! Appuie sur le micro pour me parler. 🎤</div>
             </div>
 
-            <div class="input-area">
-                <input type="text" id="storyInput" placeholder="Ex: Un ours qui aime le miel..." style="margin:0;">
-                <button class="send-btn-icon" id="sendStoryBtn">
-                    <img src="assets/icons/send.png" alt="Send" style="width: 24px; height: 24px;">
+            <div class="voice-controls">
+                <div id="waveform" class="waveform">
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                    <div class="bar"></div>
+                </div>
+                <button id="recordBtn" class="record-btn">
+                    <img src="assets/icons/microphone.png" alt="Record" class="mic-icon">
                 </button>
+                <div class="recording-status" id="recordingStatus">Appuie pour parler</div>
             </div>
-
-            <button class="btn-primary" id="generateVideoBtn" style="margin-top: 20px;" disabled>Générer la
-                vidéo</button>
         </div>
 
         <!-- CONTENT SCREEN -->
@@ -256,7 +260,20 @@
             </div>
         </div>
 
+        <!-- VIDEO PLAYER MODAL -->
+        <div id="videoPlayerModal" class="video-modal">
+            <div class="video-modal-content">
+                <button id="closeVideoBtn" class="close-video-btn">×</button>
+                <div class="video-container">
+                    <iframe id="youtubePlayer" width="100%" height="100%" src="" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+
     </div>
+    <script src="config.js"></script>
     <script src="app.js"></script>
 </body>
 

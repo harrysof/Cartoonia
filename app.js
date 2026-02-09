@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Skip splash/onboarding if we have data
         navigateToScreen('home-screen');
         updateHomeScreen();
-        generateVideos();
+        fetchVideos('dessin animé pour enfants');
     } else {
         // Splash screen auto-advance
         setTimeout(() => {
@@ -148,49 +148,15 @@ function initializeEventListeners() {
         }, 1000);
     });
 
-    // Generate screen logic
-    const sendStoryBtn = document.getElementById('sendStoryBtn');
-    const storyInput = document.getElementById('storyInput');
+    // Generate screen logic (Now Voice Chat)
+    const recordBtn = document.getElementById('recordBtn');
 
-    function sendStory() {
-        const message = storyInput.value.trim();
-        if (message) {
-            addChatMessage(message, 'user');
-            storyInput.value = '';
-
-            setTimeout(() => {
-                const response = generateStoryResponse(message);
-                addChatMessage(response, 'ai');
-                document.getElementById('generateVideoBtn').disabled = false;
-            }, 1000);
-        }
+    if (recordBtn) {
+        recordBtn.addEventListener('mousedown', startRecording);
+        recordBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
+        recordBtn.addEventListener('mouseup', stopRecording);
+        recordBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); });
     }
-
-    sendStoryBtn?.addEventListener('click', sendStory);
-
-    storyInput?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            sendStory();
-        }
-    });
-
-    document.getElementById('generateVideoBtn')?.addEventListener('click', () => {
-        const btn = document.getElementById('generateVideoBtn');
-        btn.innerHTML = 'Génération...';
-        btn.disabled = true;
-
-        setTimeout(() => {
-            btn.innerHTML = 'Vidéo générée';
-            btn.style.background = 'var(--primary-teal)';
-
-            setTimeout(() => {
-                navigateToScreen('profile-screen');
-                btn.innerHTML = 'Générer la vidéo';
-                btn.disabled = false;
-                btn.style.background = '';
-            }, 1500);
-        }, 2000);
-    });
 
     // Settings button
     document.getElementById('settingsBtn')?.addEventListener('click', () => {
@@ -206,14 +172,7 @@ function initializeEventListeners() {
         }
     });
 
-    // Content Tabs
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            // Logic to filter content
-        });
-    });
+
 }
 
 // ===== KID MANAGEMENT =====
@@ -333,7 +292,119 @@ function updateScreenForSelectedKid(screenId) {
     }
 }
 
-// ===== CHAT FUNCTIONALITY =====
+// ===== VOICE CHAT FUNCTIONALITY =====
+let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
+
+async function startRecording() {
+    if (isRecording) return;
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            addVoiceMessage(audioUrl, 'user');
+
+            // AI Response
+            setTimeout(() => {
+                const randomResponse = getRandomAIResponse();
+                addChatMessage(randomResponse, 'ai');
+            }, 1500);
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        updateRecordingUI(true);
+    } catch (err) {
+        console.error('Error accessing microphone:', err);
+        alert('Impossible d\'accéder au micro. Vérifiez les permissions.');
+    }
+}
+
+function stopRecording() {
+    if (!isRecording || !mediaRecorder) return;
+
+    mediaRecorder.stop();
+    isRecording = false;
+    updateRecordingUI(false);
+
+    // Stop all tracks to release mic
+    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+}
+
+function updateRecordingUI(recording) {
+    const btn = document.getElementById('recordBtn');
+    const status = document.getElementById('recordingStatus');
+    const waveform = document.getElementById('waveform');
+
+    if (recording) {
+        btn.classList.add('recording');
+        status.textContent = 'Enregistrement... (Relâche pour envoyer)';
+        waveform.classList.add('active');
+    } else {
+        btn.classList.remove('recording');
+        status.textContent = 'Appuie pour parler';
+        waveform.classList.remove('active');
+    }
+}
+
+function addVoiceMessage(audioUrl, type) {
+    const chatArea = document.getElementById('chatArea');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `msg ${type} audio-msg`;
+
+    // Unique ID for this audio player
+    const audioId = 'audio_' + Date.now();
+
+    messageDiv.innerHTML = `
+        <button class="audio-control-btn" onclick="playAudio('${audioId}', '${audioUrl}', this)">
+            <img src="assets/icons/play_overlay.png" style="width: 14px; height: 14px;">
+        </button>
+        <div class="audio-wave"></div>
+        <audio id="${audioId}" src="${audioUrl}"></audio>
+    `;
+
+    chatArea.appendChild(messageDiv);
+    chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+window.playAudio = function (audioId, url, btn) {
+    const audio = document.getElementById(audioId);
+    const icon = btn.querySelector('img');
+
+    if (audio.paused) {
+        // Stop all other audios
+        document.querySelectorAll('audio').forEach(a => {
+            if (a.id !== audioId) {
+                a.pause();
+                a.currentTime = 0;
+                // Reset other buttons if needed (would need more complex logic/state)
+            }
+        });
+
+        audio.play();
+        // Change icon to pause (if we had one, or just keep play to restart)
+        // For simplicity:
+        btn.style.background = 'var(--primary-orange)';
+
+        audio.onended = () => {
+            btn.style.background = 'rgba(255,255,255,0.2)';
+        };
+    } else {
+        audio.pause();
+        btn.style.background = 'rgba(255,255,255,0.2)';
+    }
+};
+
 function addChatMessage(message, type) {
     const chatArea = document.getElementById('chatArea');
     const messageDiv = document.createElement('div');
@@ -344,47 +415,139 @@ function addChatMessage(message, type) {
     chatArea.scrollTop = chatArea.scrollHeight;
 }
 
-function generateStoryResponse(userMessage) {
+function getRandomAIResponse() {
     const responses = [
-        `J'ai créé une belle histoire sur ce thème pour ${appState.selectedKid.name}. Voulez-vous la générer en vidéo ?`,
-        `Excellente idée. Voici une histoire adaptée. On lance la vidéo ?`,
-        `C'est noté. L'histoire est prête. Créons la vidéo maintenant.`
+        "C'est super intéressant ! Raconte-m'en plus !",
+        "Waouh ! Tu as une très belle voix !",
+        "Hahaha, c'est très drôle !",
+        "Je suis d'accord avec toi.",
+        "Est-ce que tu peux répéter ?",
+        "C'est génial !",
+        "Tu es très intelligent !",
+        "J'aime beaucoup parler avec toi."
     ];
     return responses[Math.floor(Math.random() * responses.length)];
 }
 
-// ===== VIDEO CONTENT =====
-function generateVideos() {
+// ===== VIDEO CONTENT (YOUTUBE API) =====
+const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3/search';
+
+async function fetchVideos(query) {
+    const videoGrid = document.getElementById('videoGrid');
+    videoGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">Chargement...</div>';
+
+    if (!CONFIG.YOUTUBE_API_KEY || CONFIG.YOUTUBE_API_KEY === 'YOUR_API_KEY_HERE') {
+        // Fallback for demo if no key provided
+        console.warn('No API Key provided. Using dummy data.');
+        setTimeout(() => renderVideos(getDummyVideos(query)), 500);
+        return;
+    }
+
+    try {
+        const response = await fetch(`${YOUTUBE_API_BASE_URL}?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&type=video&safeSearch=strict&key=${CONFIG.YOUTUBE_API_KEY}`);
+        const data = await response.json();
+
+        if (data.items) {
+            renderVideos(data.items);
+        } else {
+            console.error('API Error:', data);
+            videoGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--primary-orange);">Erreur de chargement. Vérifiez la clé API.</div>';
+        }
+    } catch (error) {
+        console.error('Fetch Error:', error);
+        videoGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--primary-orange);">Erreur de connexion.</div>';
+    }
+}
+
+function renderVideos(videos) {
     const videoGrid = document.getElementById('videoGrid');
     videoGrid.innerHTML = '';
 
-    const videos = [
-        { title: 'Peppa Pig en Français', duration: '12:34' },
-        { title: 'Apprendre les Couleurs', duration: '08:15' },
-        { title: 'Comptines Douces', duration: '15:22' },
-        { title: 'Pat Patrouille', duration: '10:45' },
-        { title: 'Histoires du Soir', duration: '06:30' },
-        { title: 'Dessin Facile', duration: '20:10' }
-    ];
+    videos.forEach(video => {
+        const videoId = video.id.videoId || video.id; // Handle API vs Dummy format
+        const title = video.snippet.title;
+        const thumbnail = video.snippet.thumbnails.medium.url;
+        const channelTitle = video.snippet.channelTitle;
 
-    videos.forEach((video, index) => {
         const item = document.createElement('div');
         item.className = 'video-item';
+        item.onclick = () => playVideo(videoId);
         item.innerHTML = `
-            <div class="thumb" style="background: linear-gradient(45deg, ${getRandomColor()}, #333); position: relative; display: flex; align-items: center; justify-content: center;">
-                <img src="assets/icons/play_overlay.png" alt="Play" style="width: 48px; height: 48px;">
+            <div class="thumb" style="background-image: url('${thumbnail}'); background-size: cover; background-position: center; position: relative; display: flex; align-items: center; justify-content: center;">
+                <div style="background: rgba(0,0,0,0.5); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                    <img src="assets/icons/play_overlay.png" alt="Play" style="width: 24px; height: 24px;">
+                </div>
             </div>
             <div class="vid-info">
-                <div class="vid-title">${video.title}</div>
-                <div class="vid-meta">${video.duration} • Vu 1.2k</div>
+                <div class="vid-title">${title}</div>
+                <div class="vid-meta">${channelTitle}</div>
             </div>
         `;
         videoGrid.appendChild(item);
     });
 }
 
-// Initialize videos
-generateVideos();
+function getDummyVideos(query) {
+    // Fallback data
+    return [
+        { id: 'dQw4w9WgXcQ', snippet: { title: 'Rick Astley - Never Gonna Give You Up', channelTitle: 'Official Rick Astley', thumbnails: { medium: { url: 'https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg' } } } },
+        { id: 'C0DPdy98e4c', snippet: { title: 'TEST VIDEO: ' + query, channelTitle: 'Test Channel', thumbnails: { medium: { url: 'https://img.youtube.com/vi/C0DPdy98e4c/mqdefault.jpg' } } } },
+        { id: 'L_jWHffIx5E', snippet: { title: 'Happy Pharell Williams', channelTitle: 'Pharell', thumbnails: { medium: { url: 'https://img.youtube.com/vi/L_jWHffIx5E/mqdefault.jpg' } } } }
+    ];
+}
+
+function playVideo(videoId) {
+    if (!videoId) return;
+
+    console.log('Playing video:', videoId);
+    const modal = document.getElementById('videoPlayerModal');
+    const iframe = document.getElementById('youtubePlayer');
+
+    // Attempt to get a valid origin for the YouTube API
+    // Local files often have 'null' or 'file://' origins which can cause Error 153
+    const origin = window.location.origin === 'null' ? window.location.href.split('/')[0] + '//' + window.location.hostname : window.location.origin;
+
+    // Use a clean URL with standard parameters for better compatibility
+    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&rel=0&modestbranding=1&origin=${encodeURIComponent(origin)}`;
+
+    iframe.src = embedUrl;
+    modal.classList.add('active');
+}
+
+function closeVideo() {
+    const modal = document.getElementById('videoPlayerModal');
+    const iframe = document.getElementById('youtubePlayer');
+    iframe.src = ''; // Stop video
+    modal.classList.remove('active');
+}
+
+// Initialize videos with default category
+fetchVideos('dessin animé pour enfants');
+
+// Tab handling
+const categories = {
+    'Pour toi': 'dessin animé pour enfants',
+    'Dessins animés': 'cartoons for kids',
+    'Éducatif': 'educational videos for kids science nature',
+    'Musique': 'kids songs nursery rhymes'
+};
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const categoryName = btn.textContent;
+        const query = categories[categoryName] || 'cartoons for kids';
+        fetchVideos(query);
+    });
+});
+
+// Video Modal Event Listeners
+document.getElementById('closeVideoBtn')?.addEventListener('click', closeVideo);
+document.getElementById('videoPlayerModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'videoPlayerModal') closeVideo();
+});
 
 // ===== MASCOT GLASSY EFFECT =====
 document.addEventListener('click', (e) => {
