@@ -503,12 +503,8 @@ function playVideo(videoId) {
     const modal = document.getElementById('videoPlayerModal');
     const iframe = document.getElementById('youtubePlayer');
 
-    // Attempt to get a valid origin for the YouTube API
-    // Local files often have 'null' or 'file://' origins which can cause Error 153
-    const origin = window.location.origin === 'null' ? window.location.href.split('/')[0] + '//' + window.location.hostname : window.location.origin;
-
-    // Use a clean URL with standard parameters for better compatibility
-    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&rel=0&modestbranding=1&origin=${encodeURIComponent(origin)}`;
+    // Simpler embed URL for deployment to avoid Error 153
+    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
 
     iframe.src = embedUrl;
     modal.classList.add('active');
