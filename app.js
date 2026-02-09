@@ -300,13 +300,32 @@ let isRecording = false;
 async function startRecording() {
     if (isRecording) return;
 
+    // Permissions check
+    if (!window.isSecureContext) {
+        alert("L'accès au micro nécessite une connexion sécurisée (HTTPS). Si vous testez localement, utilisez 'localhost'.");
+        return;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("Votre navigateur ne supporte pas l'enregistrement audio.");
+        return;
+    }
+
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        if (!window.MediaRecorder) {
+            alert("Votre navigateur ne supporte pas l'enregistrement (MediaRecorder).");
+            return;
+        }
+
         mediaRecorder = new MediaRecorder(stream);
         audioChunks = [];
 
         mediaRecorder.ondataavailable = (event) => {
-            audioChunks.push(event.data);
+            if (event.data.size > 0) {
+                audioChunks.push(event.data);
+            }
         };
 
         mediaRecorder.onstop = () => {
