@@ -55,9 +55,120 @@
             </div>
         </div>
 
+        <!-- MODE SELECTION SCREEN -->
+        <div class="screen" id="mode-selection-screen">
+            <div class="onboarding-container">
+                <img src="assets/logo.png" alt="Cartoonia" class="logo-header">
+                <h2 style="margin-bottom: 40px;">Qui es-tu ?</h2>
+
+                <div class="mode-cards">
+                    <div class="mode-card" id="modeParentBtn">
+                        <div class="mode-icon parent-icon">
+                            <img src="assets/icons/settings.png" alt="Parent"
+                                style="width: 40px; height: 40px; opacity: 0.8;">
+                        </div>
+                        <h3>Parent</h3>
+                        <p>Configuration</p>
+                    </div>
+
+                    <div class="mode-card" id="modeKidBtn">
+                        <div class="mode-icon kid-icon">
+                            <img src="assets/icons/smile.png" alt="Enfant" style="width: 40px; height: 40px;">
+                        </div>
+                        <h3>Enfant</h3>
+                        <p>Jouer & Regarder</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PARENT DASHBOARD (Control Panel) -->
+        <div class="screen" id="parent-dashboard-screen">
+            <div class="dashboard-header">
+                <div class="back-btn" data-back="mode-selection-screen">
+                    <img src="assets/icons/back_arrow.png" alt="Back" style="width: 24px; height: 24px;">
+                </div>
+                <span style="font-weight: 600;">Espace Parents</span>
+                <div style="width: 40px;"></div>
+            </div>
+
+            <div class="control-panel">
+                <!-- Kid Selector -->
+                <div class="control-section">
+                    <label>Configuration pour :</label>
+                    <select id="parentKidSelector" class="kid-select">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+
+                <!-- Watch Time -->
+                <div class="control-card">
+                    <div class="card-header">
+                        <div class="icon-bg orange">
+                            <img src="assets/icons/clock.png" alt="Time">
+                        </div>
+                        <div class="header-text">
+                            <h3>Temps d'écran</h3>
+                            <p id="timeLimitValue">1h 00min</p>
+                        </div>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="timeLimitSlider" min="15" max="180" step="15" value="60">
+                    </div>
+                </div>
+
+                <!-- Content Filter -->
+                <div class="control-card">
+                    <div class="card-header">
+                        <div class="icon-bg teal">
+                            <img src="assets/icons/filter.png" alt="Filter">
+                        </div>
+                        <div class="header-text">
+                            <h3>Filtre d'âge</h3>
+                            <p id="parentAgeValue">6 ans</p>
+                        </div>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" id="parentAgeSlider" min="3" max="12" step="1" value="6">
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <label class="sub-label">Contenu bloqué</label>
+                    <div class="filter-chips">
+                        <div class="filter-chip" data-filter="violence">Violence</div>
+                        <div class="filter-chip" data-filter="scary">Peur</div>
+                        <div class="filter-chip" data-filter="language">Gros mots</div>
+                    </div>
+                </div>
+
+                <!-- Video Limit -->
+                <div class="control-card">
+                    <div class="card-header">
+                        <div class="icon-bg purple">
+                            <img src="assets/icons/play_overlay.png" alt="Videos">
+                        </div>
+                        <div class="header-text">
+                            <h3>Limite de vidéos</h3>
+                            <p>Par session</p>
+                        </div>
+                        <div class="counter-control">
+                            <button id="videoLimitMinus">-</button>
+                            <span id="videoLimitValue">5</span>
+                            <button id="videoLimitPlus">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" id="saveParentSettingsBtn" style="margin-top: 20px;">
+                    Enregistrer les paramètres
+                </button>
+            </div>
+        </div>
+
         <!-- HOME SCREEN (Profile Selection) -->
         <div class="screen" id="home-screen">
-            <img src="assets/logo.png" alt="Cartoonia" class="logo-header" style="width: 100px; margin-bottom: 10px;">
+            <img src="assets/logo.png" alt="Cartoonia" class="logo-header">
             <p id="parentGreeting">Qui regarde ?</p>
 
             <div class="profiles-grid" id="profileSelector">
@@ -74,10 +185,7 @@
                 </button>
             </div>
 
-            <div class="mascot-container top">
-                <img src="assets/mascot-pointing.png" alt="Mascot" class="mascot-img clickable-mascot"
-                    style="position: relative; z-index: 5;">
-            </div>
+
         </div>
 
         <!-- PROFILE DASHBOARD (Selected Kid) -->

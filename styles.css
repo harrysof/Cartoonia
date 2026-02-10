@@ -9,6 +9,10 @@
     --border-color: #2D2D35;
     --shadow-soft: 0 10px 40px rgba(0, 0, 0, 0.5);
     --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+    /* Logo Sizing - Change these to adjust logo size */
+    --logo-size-splash: 250px;
+    --logo-size-header: 230px;
 }
 
 * {
@@ -71,7 +75,7 @@ body {
 }
 
 .splash-logo-img {
-    width: 180px;
+    width: var(--logo-size-splash);
     height: auto;
     animation: fadeScale 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     margin-bottom: 20px;
@@ -224,10 +228,60 @@ input:focus {
     padding-top: 40px;
 }
 
+/* ===== LOGO CLASSES (Per-Page Customization) ===== */
+/* Base logo styling */
 .logo-header {
-    width: 120px;
-    margin-bottom: 40px;
+    width: var(--logo-size-header);
+    margin-bottom: 30px;
+    display: block;
 }
+
+/* Parent Setup Screen Logo - Centered horizontally, default vertical */
+#parent-setup-screen .logo-header {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0;
+    /* Change this to move logo down from top */
+    margin-bottom: 120px;
+    /* Change this to adjust spacing below */
+}
+
+/* Mode Selection Screen Logo - Centered horizontally, default vertical */
+#mode-selection-screen .logo-header {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0;
+    /* Change this to move logo down from top */
+    margin-bottom: 30px;
+    /* Change this to adjust spacing below */
+}
+
+/* Home Screen Logo - Centered horizontally, default vertical */
+#home-screen .logo-header {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0;
+    /* Change this to move logo down from top */
+    margin-bottom: 30px;
+    /* Change this to adjust spacing below */
+}
+
+/* Customization Guide:
+   
+   HORIZONTAL ALIGNMENT:
+   - Left:   margin-left: 0; margin-right: auto;
+   - Center: margin-left: auto; margin-right: auto;
+   - Right:  margin-left: auto; margin-right: 0;
+   
+   VERTICAL POSITIONING:
+   - Top:    margin-top: 0; margin-bottom: 30px;
+   - Middle: margin-top: 50px; margin-bottom: 30px;
+   - Bottom: margin-top: auto; (requires parent with flex/grid)
+   
+   SIZE PER PAGE:
+   - Add: width: 150px; to override default size
+*/
+
 
 /* ===== HOME SCREEN (PROFILES) ===== */
 #home-screen {
@@ -787,18 +841,219 @@ input[type="range"]::-webkit-slider-runnable-track {
     animation: rippleEffect 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-@keyframes rippleEffect {
-    0% {
-        width: 0;
-        height: 0;
-        opacity: 1;
-    }
+/* ===== MODE SELECTION SCREEN ===== */
+.mode-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 20px;
+}
 
-    100% {
-        width: 200px;
-        height: 200px;
-        opacity: 0;
-    }
+.mode-card {
+    background: var(--card-color);
+    border-radius: 24px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.mode-card:hover {
+    transform: translateY(-5px);
+    background: #25252C;
+    border-color: var(--primary-teal);
+}
+
+.mode-card:nth-child(1):hover {
+    border-color: var(--primary-orange);
+}
+
+.mode-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.mode-icon.parent-icon {
+    background: rgba(255, 138, 76, 0.15);
+}
+
+.mode-icon.kid-icon {
+    background: rgba(78, 205, 196, 0.15);
+}
+
+.mode-card h3 {
+    font-size: 22px;
+    margin-bottom: 4px;
+    color: var(--text-main);
+}
+
+/* ===== PARENT DASHBOARD CONTROL PANEL ===== */
+.control-panel {
+    padding-bottom: 100px;
+}
+
+.control-section {
+    margin-bottom: 24px;
+}
+
+.control-section label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.kid-select {
+    width: 100%;
+    padding: 16px;
+    background: var(--card-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    color: var(--text-main);
+    font-size: 16px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 20px;
+}
+
+.control-card {
+    background: var(--card-color);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.icon-bg {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-bg img {
+    width: 24px;
+    height: 24px;
+}
+
+.icon-bg.orange {
+    background: rgba(255, 138, 76, 0.15);
+}
+
+.icon-bg.teal {
+    background: rgba(78, 205, 196, 0.15);
+}
+
+.icon-bg.purple {
+    background: rgba(107, 102, 255, 0.15);
+}
+
+.header-text h3 {
+    font-size: 16px;
+    margin-bottom: 2px;
+}
+
+.header-text p {
+    font-size: 13px;
+    color: var(--primary-orange);
+    font-weight: 600;
+}
+
+.divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 16px 0;
+}
+
+.sub-label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+/* Chips in Control Panel */
+.filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-chip {
+    padding: 8px 16px;
+    border-radius: 10px;
+    background: #25252C;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: 0.2s;
+}
+
+.filter-chip.active {
+    background: rgba(255, 76, 76, 0.15);
+    color: #FF6B6B;
+    border-color: #FF6B6B;
+}
+
+/* Counter Control */
+.counter-control {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+    background: #25252C;
+    padding: 4px;
+    border-radius: 12px;
+}
+
+.counter-control button {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: var(--card-color);
+    color: var(--text-main);
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+}
+
+.counter-control button:active {
+    background: var(--primary-orange);
+    color: white;
+}
+
+.counter-control span {
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
 }
 
 /* ===== VIDEO PLAYER MODAL ===== */
@@ -839,6 +1094,20 @@ input[type="range"]::-webkit-slider-runnable-track {
     to {
         transform: scale(1);
         opacity: 1;
+    }
+}
+
+@keyframes rippleEffect {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+
+    100% {
+        width: 200px;
+        height: 200px;
+        opacity: 0;
     }
 }
 

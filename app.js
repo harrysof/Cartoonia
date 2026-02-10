@@ -5,6 +5,17 @@ let appState = {
     parentName: '',
     kids: [],
     selectedKid: null,
+    currentMode: null, // 'parent' or 'kid'
+    parentControls: {
+        watchTimeLimit: 60, // minutes
+        videoLimit: 5,
+        filters: {
+            maxAge: 6,
+            blockedScenes: [],
+            platforms: ['youtube']
+        }
+    },
+    // Old legacy state for backward compatibility/reference
     filters: {
         platforms: ['youtube'],
         maxAge: 6,
@@ -22,7 +33,17 @@ function loadState() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
         try {
-            appState = JSON.parse(saved);
+            const parsed = JSON.parse(saved);
+            // Merge with default state to ensure new fields exist
+            appState = { ...appState, ...parsed };
+            // Ensure parentControls exists if loading old state
+            if (!appState.parentControls) {
+                appState.parentControls = {
+                    watchTimeLimit: 60,
+                    videoLimit: 5,
+                    filters: { maxAge: 6, blockedScenes: [], platforms: ['youtube'] }
+                };
+            }
             return true;
         } catch (e) {
             console.error('Failed to parse saved state', e);
@@ -36,10 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const hasSavedState = loadState();
 
     if (hasSavedState && appState.parentName && appState.kids.length > 0) {
-        // Skip splash/onboarding if we have data
-        navigateToScreen('home-screen');
-        updateHomeScreen();
-        fetchVideos('dessin animé pour enfants');
+        // We have users, go to mode selection
+        navigateToScreen('mode-selection-screen');
     } else {
         // Splash screen auto-advance
         setTimeout(() => {
@@ -91,12 +110,27 @@ function initializeEventListeners() {
     document.getElementById('confirmKidBtn')?.addEventListener('click', addKid);
     document.getElementById('continueKidsBtn')?.addEventListener('click', () => {
         if (appState.kids.length > 0) {
-            navigateToScreen('home-screen');
-            updateHomeScreen();
+            navigateToScreen('mode-selection-screen');
         } else {
             alert('Veuillez ajouter au moins un enfant');
         }
     });
+
+    // Mode Selection
+    document.getElementById('modeParentBtn')?.addEventListener('click', () => {
+        appState.currentMode = 'parent';
+        updateParentDashboard();
+        navigateToScreen('parent-dashboard-screen');
+    });
+
+    document.getElementById('modeKidBtn')?.addEventListener('click', () => {
+        appState.currentMode = 'kid';
+        navigateToScreen('home-screen');
+        updateHomeScreen(); // Show profile selector
+    });
+
+    // Parent Dashboard Controls
+    initParentControls();
 
     // Back buttons
     document.querySelectorAll('.back-btn').forEach(btn => {
@@ -117,40 +151,23 @@ function initializeEventListeners() {
         });
     });
 
-    // Filter screen logic
+    // Filter screen logic (Legacy/Individual)
     document.querySelectorAll('.chip').forEach(chip => {
         chip.addEventListener('click', () => {
             chip.classList.toggle('active');
-            // Logic to update state would go here
         });
     });
 
     const ageSlider = document.getElementById('ageSlider');
     const ageValue = document.getElementById('ageValue');
+    if (ageSlider && ageValue) {
+        ageSlider.addEventListener('input', (e) => {
+            ageValue.textContent = e.target.value + ' ans';
+        });
+    }
 
-    ageSlider?.addEventListener('input', (e) => {
-        const value = e.target.value;
-        ageValue.textContent = value + ' ans';
-        appState.filters.maxAge = parseInt(value);
-    });
-
-    document.getElementById('applyFilterBtn')?.addEventListener('click', () => {
-        const btn = document.getElementById('applyFilterBtn');
-        btn.innerHTML = '<img src="assets/icons/checkmark.png" alt="Checked" style="width: 20px; height: 20px; margin-right: 8px;"> Filtres appliqués';
-        btn.style.background = 'var(--primary-teal)';
-
-        saveState(); // Persist filters
-
-        setTimeout(() => {
-            btn.innerHTML = 'Appliquer les filtres';
-            btn.style.background = '';
-            navigateToScreen('profile-screen');
-        }, 1000);
-    });
-
-    // Generate screen logic (Now Voice Chat)
+    // Voice Chat Logic
     const recordBtn = document.getElementById('recordBtn');
-
     if (recordBtn) {
         recordBtn.addEventListener('mousedown', startRecording);
         recordBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
@@ -158,21 +175,12 @@ function initializeEventListeners() {
         recordBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); });
     }
 
-    // Settings button
+    // Settings button (Reset)
     document.getElementById('settingsBtn')?.addEventListener('click', () => {
-        if (confirm('Recommencer la configuration ?')) {
-            appState = {
-                parentName: '',
-                kids: [],
-                selectedKid: null,
-                filters: { platforms: ['youtube'], maxAge: 6, blockedScenes: [], keywords: '' }
-            };
-            localStorage.removeItem(STORAGE_KEY); // Clear persisted data
-            navigateToScreen('parent-setup-screen');
-        }
+        // In simplified kid mode, this button might be hidden or password protected in real app
+        // For now, let's make it go back to mode selection
+        navigateToScreen('mode-selection-screen');
     });
-
-
 }
 
 // ===== KID MANAGEMENT =====
@@ -195,9 +203,9 @@ function addKid() {
             id: Date.now(),
             name: name,
             age: age,
-            videosWatched: Math.floor(Math.random() * 20),
-            storiesCreated: Math.floor(Math.random() * 10),
-            timeSpent: Math.floor(Math.random() * 5)
+            videosWatched: 0,
+            storiesCreated: 0,
+            timeSpent: 0
         };
 
         appState.kids.push(kid);
@@ -231,10 +239,108 @@ function updateKidsList() {
     });
 }
 
-// ===== HOME SCREEN =====
+// ===== PARENT DASHBOARD LOGIC =====
+function initParentControls() {
+    // Populate Kid Selector
+    const kidSelect = document.getElementById('parentKidSelector');
+
+    // Time Slider
+    const timeSlider = document.getElementById('timeLimitSlider');
+    const timeValue = document.getElementById('timeLimitValue');
+
+    timeSlider?.addEventListener('input', (e) => {
+        const val = e.target.value;
+        const hours = Math.floor(val / 60);
+        const mins = val % 60;
+        timeValue.textContent = `${hours}h ${mins.toString().padStart(2, '0')}min`;
+        appState.parentControls.watchTimeLimit = parseInt(val);
+    });
+
+    // Age Slider
+    const ageSlider = document.getElementById('parentAgeSlider');
+    const ageValue = document.getElementById('parentAgeValue');
+
+    ageSlider?.addEventListener('input', (e) => {
+        ageValue.textContent = e.target.value + ' ans';
+        appState.parentControls.filters.maxAge = parseInt(e.target.value);
+    });
+
+    // Valid Counters
+    const vidMinus = document.getElementById('videoLimitMinus');
+    const vidPlus = document.getElementById('videoLimitPlus');
+    const vidValue = document.getElementById('videoLimitValue');
+
+    vidMinus?.addEventListener('click', () => {
+        let val = parseInt(vidValue.textContent);
+        if (val > 1) {
+            val--;
+            vidValue.textContent = val;
+            appState.parentControls.videoLimit = val;
+        }
+    });
+
+    vidPlus?.addEventListener('click', () => {
+        let val = parseInt(vidValue.textContent);
+        if (val < 20) {
+            val++;
+            vidValue.textContent = val;
+            appState.parentControls.videoLimit = val;
+        }
+    });
+
+    // Filter Chips
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            chip.classList.toggle('active');
+            const filter = chip.getAttribute('data-filter');
+            const index = appState.parentControls.filters.blockedScenes.indexOf(filter);
+
+            if (chip.classList.contains('active')) {
+                if (index === -1) appState.parentControls.filters.blockedScenes.push(filter);
+            } else {
+                if (index > -1) appState.parentControls.filters.blockedScenes.splice(index, 1);
+            }
+        });
+    });
+
+    // Save Button
+    document.getElementById('saveParentSettingsBtn')?.addEventListener('click', () => {
+        const btn = document.getElementById('saveParentSettingsBtn');
+        const originalText = btn.textContent;
+
+        btn.textContent = 'Enregistré !';
+        btn.style.background = 'var(--primary-teal)';
+
+        saveState();
+
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = 'var(--primary-orange)';
+        }, 1500);
+    });
+}
+
+function updateParentDashboard() {
+    const kidSelect = document.getElementById('parentKidSelector');
+    if (kidSelect) {
+        kidSelect.innerHTML = appState.kids.map(k => `<option value="${k.id}">${k.name}</option>`).join('');
+    }
+
+    // Restore values from state (simplified: applying same settings to all for now)
+    document.getElementById('timeLimitSlider').value = appState.parentControls.watchTimeLimit;
+    // Trigger input event to update text
+    document.getElementById('timeLimitSlider').dispatchEvent(new Event('input'));
+
+    document.getElementById('parentAgeSlider').value = appState.parentControls.filters.maxAge;
+    document.getElementById('parentAgeSlider').dispatchEvent(new Event('input'));
+
+    document.getElementById('videoLimitValue').textContent = appState.parentControls.videoLimit;
+}
+
+// ===== HOME SCREEN (KID MODE) =====
 function updateHomeScreen() {
     const greeting = document.getElementById('parentGreeting');
-    greeting.textContent = `Bonjour ${appState.parentName}, qui regarde ?`;
+    greeting.textContent = `Bonjour, qui regarde ?`;
 
     const profileSelector = document.getElementById('profileSelector');
     profileSelector.innerHTML = '';
@@ -251,16 +357,6 @@ function updateHomeScreen() {
         `;
         profileSelector.appendChild(profileCard);
     });
-
-    // Add "Add Profile" button
-    const addBtn = document.createElement('div');
-    addBtn.className = 'add-profile-btn';
-    addBtn.onclick = showAddKidModal;
-    addBtn.innerHTML = `
-        <img src="assets/icons/add_profile.png" alt="Add" style="width: 32px; height: 32px; margin-bottom: 8px;">
-        <span>Ajouter</span>
-    `;
-    profileSelector.appendChild(addBtn);
 }
 
 function getRandomColor() {
@@ -273,11 +369,45 @@ function selectKid(kidId) {
     if (kid) {
         appState.selectedKid = kid;
 
-        // Update dashboard
+        // Custom Kid View Logic
+        // In the new simplified mode, we hide stats and simplify actions
+        const statsRow = document.querySelector('.stats-row');
+        if (statsRow) statsRow.style.display = 'none'; // Hide stats for cleaner look
+
+        // Update name
         document.getElementById('dashName').textContent = kid.name;
-        document.getElementById('statVideos').textContent = kid.videosWatched;
-        document.getElementById('statStories').textContent = kid.storiesCreated;
-        document.getElementById('statTime').textContent = `${kid.timeSpent}h`;
+
+        // Update Actions - Only Show 2 Options
+        const actionsContainer = document.querySelector('.dashboard-actions');
+        actionsContainer.innerHTML = `
+            <div class="dash-action-card" data-screen="youtube-screen" style="background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 99%); border: none;">
+                <div class="action-info">
+                    <h3 style="color: #000; font-size: 20px;">Regarder des vidéos</h3>
+                    <p style="color: rgba(0,0,0,0.6);">Dessins animés & chansons</p>
+                </div>
+                <div class="icon-box" style="background: rgba(255,255,255,0.4);">
+                    <img src="assets/icons/play_overlay.png" alt="Watch" style="width: 28px; height: 28px; filter: brightness(0);">
+                </div>
+            </div>
+
+            <div class="dash-action-card" data-screen="generate-screen" style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); border: none;">
+                <div class="action-info">
+                    <h3 style="color: #000; font-size: 20px;">Parler à l'ami IA</h3>
+                    <p style="color: rgba(0,0,0,0.6);">Pose tes questions !</p>
+                </div>
+                <div class="icon-box" style="background: rgba(255,255,255,0.4);">
+                    <img src="assets/icons/microphone.png" alt="Voice" style="width: 28px; height: 28px; filter: brightness(0);">
+                </div>
+            </div>
+        `;
+
+        // Re-attach listeners to new elements
+        actionsContainer.querySelectorAll('.dash-action-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const targetScreen = card.getAttribute('data-screen');
+                navigateToScreen(targetScreen);
+            });
+        });
 
         navigateToScreen('profile-screen');
     }
@@ -285,11 +415,7 @@ function selectKid(kidId) {
 
 function updateScreenForSelectedKid(screenId) {
     if (!appState.selectedKid) return;
-
-    if (screenId === 'filter-screen') {
-        document.getElementById('ageSlider').value = appState.selectedKid.age;
-        document.getElementById('ageValue').textContent = appState.selectedKid.age + ' ans';
-    }
+    // Additional logic if needed when entering screens
 }
 
 // ===== VOICE CHAT FUNCTIONALITY =====
@@ -299,44 +425,25 @@ let isRecording = false;
 
 async function startRecording() {
     if (isRecording) return;
-
-    // Permissions check
-    if (!window.isSecureContext) {
-        alert("L'accès au micro nécessite une connexion sécurisée (HTTPS). Si vous testez localement, utilisez 'localhost'.");
-        return;
-    }
-
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        alert("Votre navigateur ne supporte pas l'enregistrement audio.");
-        return;
+    if (!window.isSecureContext && location.hostname !== 'localhost') {
+        alert("Microphone requires HTTPS"); return;
     }
 
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-        if (!window.MediaRecorder) {
-            alert("Votre navigateur ne supporte pas l'enregistrement (MediaRecorder).");
-            return;
-        }
-
         mediaRecorder = new MediaRecorder(stream);
         audioChunks = [];
 
         mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                audioChunks.push(event.data);
-            }
+            if (event.data.size > 0) audioChunks.push(event.data);
         };
 
         mediaRecorder.onstop = () => {
             const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
             const audioUrl = URL.createObjectURL(audioBlob);
             addVoiceMessage(audioUrl, 'user');
-
-            // AI Response
             setTimeout(() => {
-                const randomResponse = getRandomAIResponse();
-                addChatMessage(randomResponse, 'ai');
+                addChatMessage(getRandomAIResponse(), 'ai');
             }, 1500);
         };
 
@@ -344,93 +451,64 @@ async function startRecording() {
         isRecording = true;
         updateRecordingUI(true);
     } catch (err) {
-        console.error('Error accessing microphone:', err);
-        alert('Impossible d\'accéder au micro. Vérifiez les permissions.');
+        console.error('Mic Error:', err);
+        alert('Erreur micro: ' + err.message);
     }
 }
 
 function stopRecording() {
     if (!isRecording || !mediaRecorder) return;
-
     mediaRecorder.stop();
     isRecording = false;
     updateRecordingUI(false);
-
-    // Stop all tracks to release mic
     mediaRecorder.stream.getTracks().forEach(track => track.stop());
 }
 
 function updateRecordingUI(recording) {
     const btn = document.getElementById('recordBtn');
     const status = document.getElementById('recordingStatus');
-    const waveform = document.getElementById('waveform');
+    const waveform = document.getElementById('waveform'); // Add logic if element exists
 
     if (recording) {
         btn.classList.add('recording');
-        status.textContent = 'Enregistrement... (Relâche pour envoyer)';
-        waveform.classList.add('active');
+        status.textContent = 'Enregistrement...';
+        if (waveform) waveform.classList.add('active');
     } else {
         btn.classList.remove('recording');
         status.textContent = 'Appuie pour parler';
-        waveform.classList.remove('active');
+        if (waveform) waveform.classList.remove('active');
     }
 }
 
 function addVoiceMessage(audioUrl, type) {
     const chatArea = document.getElementById('chatArea');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `msg ${type} audio-msg`;
-
-    // Unique ID for this audio player
+    const msg = document.createElement('div');
+    msg.className = `msg ${type} audio-msg`;
     const audioId = 'audio_' + Date.now();
-
-    messageDiv.innerHTML = `
-        <button class="audio-control-btn" onclick="playAudio('${audioId}', '${audioUrl}', this)">
-            <img src="assets/icons/play_overlay.png" style="width: 14px; height: 14px;">
-        </button>
-        <div class="audio-wave"></div>
-        <audio id="${audioId}" src="${audioUrl}"></audio>
-    `;
-
-    chatArea.appendChild(messageDiv);
+    msg.innerHTML = `<button class="audio-control-btn" onclick="playAudio('${audioId}', '${audioUrl}', this)">▶</button><audio id="${audioId}" src="${audioUrl}"></audio>`;
+    chatArea.appendChild(msg);
     chatArea.scrollTop = chatArea.scrollHeight;
 }
 
-window.playAudio = function (audioId, url, btn) {
-    const audio = document.getElementById(audioId);
-    const icon = btn.querySelector('img');
-
+window.playAudio = function (id, url, btn) {
+    const audio = document.getElementById(id);
     if (audio.paused) {
-        // Stop all other audios
-        document.querySelectorAll('audio').forEach(a => {
-            if (a.id !== audioId) {
-                a.pause();
-                a.currentTime = 0;
-                // Reset other buttons if needed (would need more complex logic/state)
-            }
-        });
-
+        document.querySelectorAll('audio').forEach(a => a.pause());
         audio.play();
-        // Change icon to pause (if we had one, or just keep play to restart)
-        // For simplicity:
-        btn.style.background = 'var(--primary-orange)';
-
-        audio.onended = () => {
-            btn.style.background = 'rgba(255,255,255,0.2)';
-        };
+        btn.textContent = '⏸';
+        audio.onended = () => btn.textContent = '▶';
     } else {
         audio.pause();
-        btn.style.background = 'rgba(255,255,255,0.2)';
+        btn.textContent = '▶';
     }
 };
 
 function addChatMessage(message, type) {
     const chatArea = document.getElementById('chatArea');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `msg ${type}`;
-    messageDiv.textContent = message;
-
-    chatArea.appendChild(messageDiv);
+    const div = document.createElement('div');
+    div.className = `msg ${type}`;
+    div.textContent = message;
+    chatArea.appendChild(div);
     chatArea.scrollTop = chatArea.scrollHeight;
 }
 
@@ -438,12 +516,9 @@ function getRandomAIResponse() {
     const responses = [
         "C'est super intéressant ! Raconte-m'en plus !",
         "Waouh ! Tu as une très belle voix !",
-        "Hahaha, c'est très drôle !",
         "Je suis d'accord avec toi.",
-        "Est-ce que tu peux répéter ?",
         "C'est génial !",
-        "Tu es très intelligent !",
-        "J'aime beaucoup parler avec toi."
+        "Tu es très intelligent !"
     ];
     return responses[Math.floor(Math.random() * responses.length)];
 }
@@ -453,28 +528,21 @@ const YOUTUBE_API_BASE_URL = 'https://www.googleapis.com/youtube/v3/search';
 
 async function fetchVideos(query) {
     const videoGrid = document.getElementById('videoGrid');
-    videoGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">Chargement...</div>';
+    videoGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px;">Chargement...</div>';
 
-    if (!CONFIG.YOUTUBE_API_KEY || CONFIG.YOUTUBE_API_KEY === 'YOUR_API_KEY_HERE') {
-        // Fallback for demo if no key provided
-        console.warn('No API Key provided. Using dummy data.');
+    if (!CONFIG.YOUTUBE_API_KEY || CONFIG.YOUTUBE_API_KEY.includes('YOUR_API_KEY')) {
         setTimeout(() => renderVideos(getDummyVideos(query)), 500);
         return;
     }
 
     try {
-        const response = await fetch(`${YOUTUBE_API_BASE_URL}?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&type=video&safeSearch=strict&key=${CONFIG.YOUTUBE_API_KEY}`);
+        const response = await fetch(`${YOUTUBE_API_BASE_URL}?part=snippet&maxResults=${appState.parentControls.videoLimit || 10}&q=${encodeURIComponent(query)}&type=video&safeSearch=strict&key=${CONFIG.YOUTUBE_API_KEY}`);
         const data = await response.json();
-
-        if (data.items) {
-            renderVideos(data.items);
-        } else {
-            console.error('API Error:', data);
-            videoGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--primary-orange);">Erreur de chargement. Vérifiez la clé API.</div>';
-        }
+        if (data.items) renderVideos(data.items);
+        else console.error('API Error', data);
     } catch (error) {
-        console.error('Fetch Error:', error);
-        videoGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--primary-orange);">Erreur de connexion.</div>';
+        console.error('Fetch Error', error);
+        renderVideos(getDummyVideos(query)); // Fallback
     }
 }
 
@@ -483,23 +551,16 @@ function renderVideos(videos) {
     videoGrid.innerHTML = '';
 
     videos.forEach(video => {
-        const videoId = video.id.videoId || video.id; // Handle API vs Dummy format
-        const title = video.snippet.title;
+        const videoId = video.id.videoId || video.id;
         const thumbnail = video.snippet.thumbnails.medium.url;
-        const channelTitle = video.snippet.channelTitle;
 
         const item = document.createElement('div');
         item.className = 'video-item';
         item.onclick = () => playVideo(videoId);
         item.innerHTML = `
-            <div class="thumb" style="background-image: url('${thumbnail}'); background-size: cover; background-position: center; position: relative; display: flex; align-items: center; justify-content: center;">
-                <div style="background: rgba(0,0,0,0.5); border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-                    <img src="assets/icons/play_overlay.png" alt="Play" style="width: 24px; height: 24px;">
-                </div>
-            </div>
+            <div class="thumb" style="background-image: url('${thumbnail}'); background-size: cover; height: 120px;"></div>
             <div class="vid-info">
-                <div class="vid-title">${title}</div>
-                <div class="vid-meta">${channelTitle}</div>
+                <div class="vid-title">${video.snippet.title}</div>
             </div>
         `;
         videoGrid.appendChild(item);
@@ -507,39 +568,26 @@ function renderVideos(videos) {
 }
 
 function getDummyVideos(query) {
-    // Fallback data
     return [
-        { id: 'dQw4w9WgXcQ', snippet: { title: 'Rick Astley - Never Gonna Give You Up', channelTitle: 'Official Rick Astley', thumbnails: { medium: { url: 'https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg' } } } },
-        { id: 'C0DPdy98e4c', snippet: { title: 'TEST VIDEO: ' + query, channelTitle: 'Test Channel', thumbnails: { medium: { url: 'https://img.youtube.com/vi/C0DPdy98e4c/mqdefault.jpg' } } } },
-        { id: 'L_jWHffIx5E', snippet: { title: 'Happy Pharell Williams', channelTitle: 'Pharell', thumbnails: { medium: { url: 'https://img.youtube.com/vi/L_jWHffIx5E/mqdefault.jpg' } } } }
+        { id: 'dQw4w9WgXcQ', snippet: { title: 'Rick Astley - Never Gonna Give You Up', thumbnails: { medium: { url: 'https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg' } } } },
+        { id: 'L_jWHffIx5E', snippet: { title: 'Happy Pharell Williams', thumbnails: { medium: { url: 'https://img.youtube.com/vi/L_jWHffIx5E/mqdefault.jpg' } } } },
+        { id: 'C0DPdy98e4c', snippet: { title: 'Test Video: ' + query, thumbnails: { medium: { url: 'https://img.youtube.com/vi/C0DPdy98e4c/mqdefault.jpg' } } } }
     ];
 }
 
 function playVideo(videoId) {
-    if (!videoId) return;
-
-    console.log('Playing video:', videoId);
     const modal = document.getElementById('videoPlayerModal');
     const iframe = document.getElementById('youtubePlayer');
-
-    // Simpler embed URL for deployment to avoid Error 153
-    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
-
-    iframe.src = embedUrl;
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
     modal.classList.add('active');
 }
 
-function closeVideo() {
-    const modal = document.getElementById('videoPlayerModal');
-    const iframe = document.getElementById('youtubePlayer');
-    iframe.src = ''; // Stop video
-    modal.classList.remove('active');
-}
+document.getElementById('closeVideoBtn')?.addEventListener('click', () => {
+    document.getElementById('videoPlayerModal').classList.remove('active');
+    document.getElementById('youtubePlayer').src = '';
+});
 
-// Initialize videos with default category
-fetchVideos('dessin animé pour enfants');
-
-// Tab handling
+// Category Tabs
 const categories = {
     'Pour toi': 'dessin animé pour enfants',
     'Dessins animés': 'cartoons for kids',
@@ -551,44 +599,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-
-        const categoryName = btn.textContent;
-        const query = categories[categoryName] || 'cartoons for kids';
-        fetchVideos(query);
+        fetchVideos(categories[btn.textContent] || 'cartoons');
     });
 });
 
-// Video Modal Event Listeners
-document.getElementById('closeVideoBtn')?.addEventListener('click', closeVideo);
-document.getElementById('videoPlayerModal')?.addEventListener('click', (e) => {
-    if (e.target.id === 'videoPlayerModal') closeVideo();
-});
-
-// ===== MASCOT GLASSY EFFECT =====
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('clickable-mascot')) {
-        const mascot = e.target;
-        const container = mascot.parentElement;
-
-        // Create ripple element
-        const ripple = document.createElement('div');
-        ripple.className = 'glassy-ripple';
-
-        // Position ripple at click location
-        const rect = mascot.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        ripple.style.left = `${x}px`;
-        ripple.style.top = `${y}px`;
-        ripple.style.transform = 'translate(-50%, -50%)';
-
-        container.style.position = 'relative';
-        container.appendChild(ripple);
-
-        // Remove ripple after animation
-        setTimeout(() => {
-            ripple.remove();
-        }, 800);
-    }
-});
