@@ -1141,3 +1141,38 @@ input[type="range"]::-webkit-slider-runnable-track {
     width: 100%;
     height: 100%;
 }
+
+/* ===== AVATAR SELECTION ===== */
+.avatar-selection-container {
+    margin-bottom: 20px;
+}
+
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.avatar-item {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: 0.2s;
+    background: #333;
+}
+
+.avatar-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-item.selected {
+    border-color: var(--primary-orange);
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(255, 138, 76, 0.5);
+}

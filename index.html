@@ -95,10 +95,16 @@
             <div class="control-panel">
                 <!-- Kid Selector -->
                 <div class="control-section">
-                    <label>Configuration pour :</label>
-                    <select id="parentKidSelector" class="kid-select">
-                        <!-- Populated dynamically -->
-                    </select>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div style="flex: 1;">
+                            <label>Configuration pour :</label>
+                            <select id="parentKidSelector" class="kid-select">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                        <button id="addKidFromDashBtn" class="btn-secondary"
+                            style="width: auto; padding: 10px 15px; height: 100%; margin-top: 24px;">+</button>
+                    </div>
                 </div>
 
                 <!-- Watch Time -->
@@ -359,6 +365,16 @@
                     <img src="assets/icons/close.png" alt="Close" style="width: 20px; height: 20px; opacity: 0.6;">
                 </button>
                 <h3 style="margin-bottom: 20px;">Ajouter un profil</h3>
+
+                <div class="avatar-selection-container">
+                    <p style="text-align: left; font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Choisis
+                        un avatar :</p>
+                    <div class="avatar-grid" id="avatarGrid">
+                        <!-- Dynamic Avatars -->
+                    </div>
+                    <input type="hidden" id="selectedAvatarInput" value="avatar_1">
+                </div>
+
                 <input type="text" id="kidNameInput" placeholder="Prénom">
                 <input type="number" id="kidAgeInput" placeholder="Âge">
                 <div style="display: flex; gap: 10px;">

@@ -186,23 +186,53 @@ function initializeEventListeners() {
 // ===== KID MANAGEMENT =====
 function showAddKidModal() {
     document.getElementById('addKidModal').style.display = 'flex';
+    populateAvatarGrid();
 }
 
 function hideAddKidModal() {
     document.getElementById('addKidModal').style.display = 'none';
     document.getElementById('kidNameInput').value = '';
     document.getElementById('kidAgeInput').value = '';
+    // Reset avatar selection
+    document.getElementById('selectedAvatarInput').value = 'avatar_1';
+    const avatars = document.querySelectorAll('.avatar-item');
+    avatars.forEach(a => a.classList.remove('selected'));
+    if (avatars.length > 0) avatars[0].classList.add('selected');
+}
+
+function populateAvatarGrid() {
+    const grid = document.getElementById('avatarGrid');
+    grid.innerHTML = '';
+    const avatarCount = 8; // Number of supported avatars
+
+    for (let i = 1; i <= avatarCount; i++) {
+        const avatarId = `avatar_${i}`;
+        const item = document.createElement('div');
+        item.className = `avatar-item ${i === 1 ? 'selected' : ''}`;
+        item.dataset.avatar = avatarId;
+        item.innerHTML = `<img src="assets/avatars/${avatarId}.png" alt="Avatar" onerror="this.src='assets/icons/profile_overlay.png'">`;
+
+        item.addEventListener('click', () => {
+            document.querySelectorAll('.avatar-item').forEach(a => a.classList.remove('selected'));
+            item.classList.add('selected');
+            document.getElementById('selectedAvatarInput').value = avatarId;
+        });
+
+        grid.appendChild(item);
+    }
 }
 
 function addKid() {
     const name = document.getElementById('kidNameInput').value.trim();
     const age = parseInt(document.getElementById('kidAgeInput').value);
+    const avatarId = document.getElementById('selectedAvatarInput').value;
 
     if (name && age > 0 && age <= 12) {
         const kid = {
             id: Date.now(),
             name: name,
             age: age,
+            avatar: avatarId,
             videosWatched: 0,
             storiesCreated: 0,
             timeSpent: 0
@@ -212,6 +242,11 @@ function addKid() {
         saveState(); // Persist new kid
         updateKidsList();
         hideAddKidModal();
+
+        // If added from dashboard, refresh selector
+        if (appState.currentMode === 'parent') {
+            updateParentDashboard();
+        }
     } else {
         alert('Nom et âge valides requis');
     }
@@ -219,6 +254,7 @@ function addKid() {
 
 function updateKidsList() {
     const kidsList = document.getElementById('kidsList');
+    if (!kidsList) return; // Might not exist on all screens if logic changes
     kidsList.innerHTML = '';
 
     appState.kids.forEach(kid => {
@@ -228,8 +264,12 @@ function updateKidsList() {
         kidCard.style.padding = '10px';
         kidCard.style.marginBottom = '10px';
 
+        const avatarSrc = kid.avatar ? `assets/avatars/${kid.avatar}.png` : 'assets/icons/profile_overlay.png';
+
         kidCard.innerHTML = `
-            <div class="profile-avatar" style="width: 40px; height: 40px; border-width: 2px; margin-bottom: 0; background-color: var(--primary-orange);"></div>
+            <div class="profile-avatar" style="width: 40px; height: 40px; border-width: 2px; margin-bottom: 0; background-color: var(--primary-orange);">
+                 <img src="${avatarSrc}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.src='assets/icons/profile_overlay.png'">
+            </div>
             <div style="margin-left: 10px; flex: 1; text-align: left;">
                 <div class="profile-name">${kid.name}</div>
                 <div style="font-size: 12px; color: var(--text-muted);">${kid.age} ans</div>
@@ -243,6 +283,9 @@ function updateKidsList() {
 function initParentControls() {
     // Populate Kid Selector
     const kidSelect = document.getElementById('parentKidSelector');
+
+    // Add Kid Button (Dashboard)
+    document.getElementById('addKidFromDashBtn')?.addEventListener('click', showAddKidModal);
 
     // Time Slider
     const timeSlider = document.getElementById('timeLimitSlider');
@@ -349,15 +392,19 @@ function updateHomeScreen() {
         const profileCard = document.createElement('div');
         profileCard.className = 'profile-card';
         profileCard.onclick = () => selectKid(kid.id);
+
+        const avatarSrc = kid.avatar ? `assets/avatars/${kid.avatar}.png` : 'assets/icons/profile_overlay.png';
+
         profileCard.innerHTML = `
-            <div class="profile-avatar" style="background: linear-gradient(135deg, ${getRandomColor()}, ${getRandomColor()}); position: relative; display: flex; align-items: center; justify-content: center;">
-                <img src="assets/icons/profile_overlay.png" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8; border-radius: 50%;">
+            <div class="profile-avatar" style="position: relative; display: flex; align-items: center; justify-content: center; background-color: var(--card-color); border: 2px solid var(--primary-orange);">
+                <img src="${avatarSrc}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.src='assets/icons/profile_overlay.png'">
             </div>
             <p class="profile-name">${kid.name}</p>
         `;
         profileSelector.appendChild(profileCard);
     });
 }
+
 
 function getRandomColor() {
     const colors = ['#FF8A4C', '#4ECDC4', '#FF6B6B', '#6B66FF', '#FFB84C'];
@@ -374,8 +421,11 @@ function selectKid(kidId) {
         const statsRow = document.querySelector('.stats-row');
         if (statsRow) statsRow.style.display = 'none'; // Hide stats for cleaner look
 
-        // Update name
+        // Update name and avatar in dashboard header
         document.getElementById('dashName').textContent = kid.name;
+        const avatarSrc = kid.avatar ? `assets/avatars/${kid.avatar}.png` : 'assets/icons/profile_overlay.png';
+        document.getElementById('dashAvatar').style.backgroundImage = `url('${avatarSrc}')`;
+        document.getElementById('dashAvatar').style.backgroundSize = 'cover';
 
         // Update Actions - Only Show 2 Options
         const actionsContainer = document.querySelector('.dashboard-actions');
