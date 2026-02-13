@@ -2,11 +2,17 @@
 
 A Netflix Kids-style mobile app prototype for filtering and generating safe content for children.
 
-## 🚀 Quick Start
+## 🚀 Quick Start (Prototype)
 
-The app is currently running at: **http://localhost:8000**
+This repository contains a frontend UI prototype. There is no backend service bundled in this repo.
 
-Simply open this URL in your browser to view the prototype!
+To view the prototype locally:
+- Open `index.html` directly in your browser, or
+- Serve the folder with a simple static server (recommended), for example:
+  - Python 3: `python -m http.server 8000` then open `http://localhost:8000`
+  - Node: `npx http-server .` then open the provided URL
+
+Note: This is a UI prototype — many features are visual placeholders. See "Prototype Notes" below for details.
 
 ## 📱 Features
 
@@ -27,7 +33,7 @@ Simply open this URL in your browser to view the prototype!
   - Peur / Horreur
   - Consommation
 - Add forbidden keywords
-- Launch filtering process
+- Launch filtering process (visual demo)
 
 ### 3. **Story Generator Screen** (Higgsfield AI UI)
 - Chat-style interface for story creation
@@ -35,12 +41,38 @@ Simply open this URL in your browser to view the prototype!
 - Modify or validate stories
 - Add optional sources (Image, PDF, Audio)
 - Select language (Arabe, Français, English)
-- Generate video button
+- Generate video button (visual demo)
 
 ### 4. **YouTube Kids Content**
-- Curated video grid
+- Curated video grid (UI mock)
 - Category tabs (Pour toi, Dessins animés, Éducatif, Musique)
-- Video cards with thumbnails and metadata
+- Video cards with thumbnails and metadata (placeholders)
+
+## 🔑 YouTube API (Important)
+
+To enable actual YouTube search/content features you must obtain a YouTube Data API v3 key and provide it to the prototype.
+
+1. Get a YouTube Data API v3 key:
+   - Follow Google Cloud console instructions to create a project and enable the YouTube Data API v3.
+   - Create an API key.
+
+2. Add the key to the app:
+   - Create a `config.js` file in the project root (or update your existing one).
+   - Example `config.js` (client-side prototype usage):
+     ```javascript
+     // config.js
+     // Replace with your YouTube Data API v3 key
+     window.CARTOONIA_CONFIG = {
+       YOUTUBE_API_KEY: 'YOUR_API_KEY_HERE'
+     };
+     ```
+   - The app reads `window.CARTOONIA_CONFIG.YOUTUBE_API_KEY`. Without this key, YouTube-related UI remains a placeholder.
+
+3. Security note:
+   - API keys embedded in client-side code are visible to users. For production use:
+     - Proxy YouTube requests through a backend service that stores the key securely, or
+     - Use a restricted key with appropriate HTTP referrers and quotas.
+   - Add `config.js` to `.gitignore` if you do not want to commit it.
 
 ## 🎨 Design Features
 
@@ -64,17 +96,19 @@ Simply open this URL in your browser to view the prototype!
 
 ```
 cartoonia/
-├── index.html      # Main HTML structure (4 screens)
-├── styles.css      # Complete design system
-├── app.js          # Interactive JavaScript
+├── index.html         # Main HTML structure (4 screens)
+├── styles.css         # Complete design system
+├── app.js             # Interactive JavaScript (prototype UI)
+├── config.js*         # Optional — put your YOUTUBE_API_KEY here (see README)
 └── assets/
     └── fox-mascot.jpg  # Mascot character
 ```
+* `config.js` is optional for the prototype; required only if you want to enable real YouTube integration.
 
 ## 🎯 Prototype Notes
 
-This is a **UI prototype only** - no actual functionality is implemented:
-- No real YouTube API integration
+This is a **UI prototype only** — no full backend functionality is implemented by default:
+- No real YouTube API integration unless you add a valid API key and implement calls
 - No actual Higgsfield AI connection
 - No backend filtering logic
 - All interactions are visual demonstrations
@@ -88,7 +122,7 @@ Works best in modern browsers:
 
 ## 📝 Next Steps for Full Implementation
 
-1. Integrate YouTube Data API v3
+1. Integrate YouTube Data API v3 (server-side proxy recommended)
 2. Connect Higgsfield AI for story generation
 3. Build backend filtering service
 4. Add user authentication
